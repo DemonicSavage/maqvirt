@@ -1,0 +1,70 @@
+#!/usr/bin/python
+
+import sys
+
+NUM_REGS = 3
+
+regs = [None]*NUM_REGS
+program = []
+p_counter = 0
+
+def ReadProgram(file):
+    global program
+    with open(file) as p:
+        program = p.readlines()
+    for line in program:
+        line = int(line, 16)
+
+instruction = 0
+register1 = 0
+register2 = 0
+register3 = 0
+integer = 0
+
+def DecodeProgram(instr):
+    global instruction, register1, register2, register3, integer
+    instruction = (instr & 0xF000) >> 12
+    register1   = (instr &  0xF00) >>  8
+    register2   = (instr &   0xF0) >>  4
+    register3   = (instr &    0xF)
+    integer     = (instr &   0xFF)
+
+running = True
+
+def EvalProgram():
+    global regs, instruction, register1, register2, register3, integer, running
+    if(instruction==0):
+        print "halt"
+        running = False
+    elif(instruction==1):
+        print('ld r{:d} #{:d}'.format(register1, integer))
+        regs[register1] = integer
+    elif(instruction==2):
+        print('add r{:d} r{:d} r{:d}'.format(register1, register2, register3))
+        regs[register1] = regs[register2] + regs[register3]
+    elif(instruction==3):
+        print('sub r{:d} r{:d} r{:d}'.format(register1, register2, register3))
+        regs[register1] = regs[register2] - regs[register3]
+    elif(instruction==4):
+        print('mul r{:d} r{:d} r{:d}'.format(register1, register2, register3))
+        regs[register1] = regs[register2] * regs[register3]
+    elif(instruction==5):
+        print('div r{:d} r{:d} r{:d}'.format(register1, register2, register3))
+        regs[register1] = regs[register2] / regs[register3]
+    elif(instruction==6):
+        print('prnt r{:d} #{:d}'.format(register1, regs[register1]))
+
+def RunProgram():
+    global program, p_counter
+    while(running):
+        instr = int(program[p_counter], 16)
+        DecodeProgram(instr)
+        EvalProgram()
+        p_counter += 1
+
+def main():
+    ReadProgram(sys.argv[1])
+    RunProgram()
+
+if __name__ == "__main__":
+    main()
